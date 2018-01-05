@@ -1,0 +1,375 @@
+
+
+global proc int DirectXFileTranslatorOptionsScript(string $parent, string $action, string $initialSettings, string $resultCallback)
+{
+    $initialSettings = "-format txt;-float 32;-verticies;-normals;-texturecoordinates;-materials;-defaultmaterial 0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,2.0;-textures;-shaders;-bones;-keyframes 45,1;-transform 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1;";
+    print "\n";
+    print "************************************************************\n";
+    print "Initial Settings: ";
+    print $initialSettings;
+    print "\n";
+    print "************************************************************\n";
+	// handle post action
+	if ($action == "post")
+	{
+		// Build the gui for the export options
+		// ------------------------------------
+    		setParent $parent;
+				columnLayout;
+        			radioButtonGrp -numberOfRadioButtons 4 -label "File Format: " -label1 "txt" -label2 "bin" -label3 "tzip" -label4 "bzip" -select 1 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -columnWidth 5 50 -enable1 true -enable2 true -enable3 false -enable4 false fileFormatRadioButton;
+        		setParent ..;
+    		setParent ..;
+		    	
+			frameLayout -label "Vertex Data" -collapsable true;
+					columnLayout;
+    					checkBox -label "Export Vertices" -value true -enable false  -annotation "Must always export vertices" exportVerticesCheckBox;
+    					checkBox -label "Export Normals" -value true exportNormalsCheckBox;
+    					checkBox -label "Export Texture Co-ordinates" -value true exportTextureCoordinatesCheckBox;
+    					//checkBox -label "Export Vertex Colours" -value false -enable false exportVertexColoursCheckBox;
+					setParent ..;
+			setParent ..;
+
+			frameLayout -label "Materials" -collapsable true;
+					columnLayout;
+    					checkBox -label "Export Materials" -value true 
+    					         -onCommand("checkBox -e -value true -enable true exportDefaultMaterialCheckbox; checkBox -e -value true -enable true exportMaterialTexturesCheckbox; checkBox -e -value true -enable true exportMaterialShadersCheckbox; floatFieldGrp -e -enable true faceColourFloatFieldBox; floatFieldGrp -e -enable true specularColourFloatFieldBox; floatFieldGrp -e -enable true emmisiveColourFloatFieldBox; floatFieldGrp -e -enable true specularPowerFloatFieldBox;")
+    					         -offCommand("checkBox -e -value false -enable false exportDefaultMaterialCheckbox; checkBox -e -value false -enable false exportMaterialTexturesCheckbox; checkBox -e -value false -enable false exportMaterialShadersCheckbox; floatFieldGrp -e -enable false faceColourFloatFieldBox; floatFieldGrp -e -enable false specularColourFloatFieldBox; floatFieldGrp -e -enable false emmisiveColourFloatFieldBox; floatFieldGrp -e -enable false specularPowerFloatFieldBox;")
+    					         exportMaterialsCheckbox;
+    					checkBox -label "Export Default Material" -value true 
+    					         -onCommand("floatFieldGrp -e -enable true faceColourFloatFieldBox; floatFieldGrp -e -enable true specularColourFloatFieldBox; floatFieldGrp -e -enable true emmisiveColourFloatFieldBox; floatFieldGrp -e -enable true specularPowerFloatFieldBox;")
+    					         -offCommand("floatFieldGrp -e -enable false faceColourFloatFieldBox; floatFieldGrp -e -enable false specularColourFloatFieldBox; floatFieldGrp -e -enable false emmisiveColourFloatFieldBox; floatFieldGrp -e -enable false specularPowerFloatFieldBox;")
+    					         exportDefaultMaterialCheckbox;
+    					// properties of default material
+					    floatFieldGrp -numberOfFields 4 -label "Face Colour" -value1 0.7 -value2 0.7 -value3 0.7 -value4 1.0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -columnWidth 5 50 faceColourFloatFieldBox;
+					    floatFieldGrp -numberOfFields 4 -label "Spec Colour" -value1 0.7 -value2 0.7 -value3 0.7 -value4 1.0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -columnWidth 5 50 specularColourFloatFieldBox;
+					    floatFieldGrp -numberOfFields 4 -label "Emmisive Colour" -value1 0.7 -value2 0.7 -value3 0.7 -value4 1.0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -columnWidth 5 50 emmisiveColourFloatFieldBox;
+					    floatFieldGrp -numberOfFields 1 -label "Specular Power" -value1 2.0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 specularPowerFloatFieldBox;
+    					checkBox -label "Export Material Textures" -value true exportMaterialTexturesCheckbox;
+    					checkBox -label "Export Material Shaders" -value true exportMaterialShadersCheckbox;
+					setParent ..;
+			setParent ..;
+
+			frameLayout -label "Animation" -collapsable true;
+					columnLayout;
+    					checkBox -label "Export Bones and Vertex Weights" -value true 
+    					-onCommand("checkBox -e -value true -enable true exportKeyframesCheckbox; intFieldGrp -e -enable true ticksPerFrameFieldGroup; intFieldGrp -e -enable true distancePerFrameFieldGroup;")
+    					-offCommand("checkBox -e -value false -enable false exportKeyframesCheckbox; intFieldGrp -e -enable false ticksPerFrameFieldGroup; intFieldGrp -e -enable false distancePerFrameFieldGroup;")
+    					exportBonesAndVertexWeightsCheckbox;
+    					checkBox -label "Export Keyframes" -value true 
+    					-onCommand("intFieldGrp -e -enable true ticksPerFrameFieldGroup; intFieldGrp -e -enable true distancePerFrameFieldGroup;")
+    					-offCommand("intFieldGrp -e -enable false ticksPerFrameFieldGroup; intFieldGrp -e -enable false distancePerFrameFieldGroup;")
+    					exportKeyframesCheckbox;
+                        intFieldGrp -numberOfFields 1 -label "Ticks Per Frame: " -value1 45 ticksPerFrameFieldGroup;
+                        intFieldGrp -numberOfFields 1 -label "Distance Per Frame: " -value1 1 distancePerFrameFieldGroup;
+					setParent ..;
+			setParent ..;			
+
+			frameLayout -label "Scene" -collapsable true;
+					columnLayout;
+					checkBox -label "Transform Scene" -value false
+					         -onCommand("floatFieldGrp -e -enable true translateFloatFieldBox; floatFieldGrp -e -enable true rotateFloatFieldBox; floatFieldGrp -e -enable true scaleFloatFieldBox;")
+					         -offCommand("floatFieldGrp -e -enable false translateFloatFieldBox; floatFieldGrp -e -enable false rotateFloatFieldBox; floatFieldGrp -e -enable false scaleFloatFieldBox;")
+					         exportDefaultMaterialCheckbox;
+				    floatFieldGrp -numberOfFields 3 -label "Translate(pixels)" -value1 0 -value2 0 -value3 0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -enable false translateFloatFieldBox;
+				    floatFieldGrp -numberOfFields 3 -label "Rotate(degrees)" -value1 0 -value2 0 -value3 0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -enable false rotateFloatFieldBox;
+				    floatFieldGrp -numberOfFields 3 -label "Scaling(%)" -value1 100 -value2 100 -value3 100 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -enable false scaleFloatFieldBox;
+					setParent ..;
+			setParent ..;		
+
+
+			frameLayout -label "Other" -collapsable true;
+					columnLayout;
+            			radioButtonGrp -numberOfRadioButtons 2 -label "Float Size: " -label1 "32" -label2 "64" -select 1 -enable1 true -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 floatSizeCheckBox;
+					setParent ..;
+			setParent ..;
+		// ----------------------------
+		
+		/* Set the gui components states to correspond with
+		   $initial settings */
+		   
+		//"-format txt;-float 32;-verticies;-normals;-texturecoordinates;-materials;-defaultmaterial 0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,2.0;-textures;-shaders;-bones;-keyframes 45,1;-transform 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1;";
+		
+		string $optionList[];
+		string $currentOptions = $initialSettings;
+		if(size($currentOptions) > 0)
+		{
+			tokenize($currentOptions, ";", $optionList);
+			for($index = 0; $index < size($optionList); $index++)
+			{
+				string $option = $optionList[$index];
+				tokenize($option, " ", $optionList);
+				if($option == "-format")
+				{
+					if ($optionList[1] == "txt")
+					{
+						radioButtonGrp -e select 1 fileFormatRadioButton;
+					}
+					else if ($optionList[1] == "bin")
+					{
+						radioButtonGrp -e select 2 fileFormatRadioButton;
+					}
+					else if ($optionList[1] == "tzip")
+					{
+						radioButtonGrp -e select 3 fileFormatRadioButton;
+					}
+					else if ($optionList[1] == "bzip")
+					{
+						radioButtonGrp -e select 4 fileFormatRadioButton;
+					}
+				}
+				else if($option == "-verticies")
+				{
+					checkBox -e -value true exportVerticesCheckBox;
+				}
+				else if($option == "-normals")
+				{
+					checkBox -e -value true exportNormalsCheckBox;
+				}
+				else if($option == "-texturecoordinates")
+				{
+					checkBox -e -value true exportTextureCoordinatesCheckBox;
+				}
+				else if($option == "-materials")
+				{
+					checkBox -e -value true exportMaterialsCheckbox;
+				}
+				else if($option == "-defaultmaterial")
+				{
+                    // TODO: handle default material
+				}
+				else if($option == "-float")
+				{
+					if ($optionList[1] == "32")
+					{
+						radioButtonGrp -e select 1 floatSizeCheckBox;
+			        }
+			        else
+					if ($optionList[1] == "64")
+					{
+						radioButtonGrp -e select 1 floatSizeCheckBox;
+			        }
+				}
+			}
+		}	   	
+		// action successful
+		return 1;
+	}
+	// handle query action
+	else if ($action == "query")
+	{
+		/* build query response string
+		   return in $resultCallback */
+		$optionString = "-format txt;-float 32;-verticies;-normals;-texturecoordinates;-materials;-defaultmaterial 0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,2.0;-textures;-shaders;-bones;-keyframes 45,1;-transform 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1;";
+		eval($resultCallback + "\"" + $optionString + "\"");
+		// action successful
+		return 1;
+	}
+	// Unrecognised Action
+	return 0;
+
+}
+
+
+
+
+//==================================
+
+
+global proc int DirectXFileTranslatorOptionsScript(string $parent, string $action, string $initialSettings, string $resultCallback)
+{
+    //$initialSettings = "-format txt;-float 32;-verticies;-normals;-texturecoordinates;-materials;-defaultmaterial 0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,2.0;-textures;-shaders;-bones;-keyframes 45,1;-transform 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1;";
+    print "\n";
+    print "************************************************************\n";
+    print "Initial Settings: ";
+    print $initialSettings;
+    print "\n";
+    print "************************************************************\n";
+    
+	// handle post action
+	if ($action == "post")
+	{
+		// Build the gui for the export options
+		// ------------------------------------
+    		setParent $parent;
+				columnLayout;
+        			radioButtonGrp -numberOfRadioButtons 4 -label "File Format: " -label1 "txt" -label2 "bin" -label3 "tzip" -label4 "bzip" -select 1 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -columnWidth 5 50 -enable1 true -enable2 true -enable3 false -enable4 false fileFormatRadioButton;
+        		setParent ..;
+    		setParent ..;
+		    	
+			frameLayout -label "Vertex Data" -collapsable true;
+					columnLayout;
+    					checkBox -label "Export Vertices" -value true -enable false  -annotation "Must always export vertices" exportVerticesCheckBox;
+    					checkBox -label "Export Normals" -value true exportNormalsCheckBox;
+    					checkBox -label "Export Texture Co-ordinates" -value true exportTextureCoordinatesCheckBox;
+    					//checkBox -label "Export Vertex Colours" -value false -enable false exportVertexColoursCheckBox;
+					setParent ..;
+			setParent ..;
+
+			frameLayout -label "Materials" -collapsable true;
+					columnLayout;
+    					checkBox -label "Export Materials" -value true 
+    					         -onCommand("checkBox -e -value true -enable true exportDefaultMaterialCheckbox; checkBox -e -value true -enable true exportMaterialTexturesCheckbox; checkBox -e -value true -enable true exportMaterialShadersCheckbox; floatFieldGrp -e -enable true faceColourFloatFieldBox; floatFieldGrp -e -enable true specularColourFloatFieldBox; floatFieldGrp -e -enable true emmisiveColourFloatFieldBox; floatFieldGrp -e -enable true specularPowerFloatFieldBox;")
+    					         -offCommand("checkBox -e -value false -enable false exportDefaultMaterialCheckbox; checkBox -e -value false -enable false exportMaterialTexturesCheckbox; checkBox -e -value false -enable false exportMaterialShadersCheckbox; floatFieldGrp -e -enable false faceColourFloatFieldBox; floatFieldGrp -e -enable false specularColourFloatFieldBox; floatFieldGrp -e -enable false emmisiveColourFloatFieldBox; floatFieldGrp -e -enable false specularPowerFloatFieldBox;")
+    					         exportMaterialsCheckbox;
+    					checkBox -label "Export Default Material" -value true 
+    					         -onCommand("floatFieldGrp -e -enable true faceColourFloatFieldBox; floatFieldGrp -e -enable true specularColourFloatFieldBox; floatFieldGrp -e -enable true emmisiveColourFloatFieldBox; floatFieldGrp -e -enable true specularPowerFloatFieldBox;")
+    					         -offCommand("floatFieldGrp -e -enable false faceColourFloatFieldBox; floatFieldGrp -e -enable false specularColourFloatFieldBox; floatFieldGrp -e -enable false emmisiveColourFloatFieldBox; floatFieldGrp -e -enable false specularPowerFloatFieldBox;")
+    					         exportDefaultMaterialCheckbox;
+    					// properties of default material
+					    floatFieldGrp -numberOfFields 4 -label "Face Colour" -value1 0.7 -value2 0.7 -value3 0.7 -value4 1.0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -columnWidth 5 50 faceColourFloatFieldBox;
+					    floatFieldGrp -numberOfFields 4 -label "Spec Colour" -value1 0.7 -value2 0.7 -value3 0.7 -value4 1.0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -columnWidth 5 50 specularColourFloatFieldBox;
+					    floatFieldGrp -numberOfFields 4 -label "Emmisive Colour" -value1 0.7 -value2 0.7 -value3 0.7 -value4 1.0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -columnWidth 5 50 emmisiveColourFloatFieldBox;
+					    floatFieldGrp -numberOfFields 1 -label "Specular Power" -value1 2.0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 specularPowerFloatFieldBox;
+    					checkBox -label "Export Material Textures" -value true exportMaterialTexturesCheckbox;
+    					checkBox -label "Export Material Shaders" -value true exportMaterialShadersCheckbox;
+					setParent ..;
+			setParent ..;
+
+			frameLayout -label "Animation" -collapsable true;
+					columnLayout;
+    					checkBox -label "Export Bones and Vertex Weights" -value true 
+    					-onCommand("checkBox -e -value true -enable true exportKeyframesCheckbox; intFieldGrp -e -enable true ticksPerFrameFieldGroup; intFieldGrp -e -enable true distancePerFrameFieldGroup;")
+    					-offCommand("checkBox -e -value false -enable false exportKeyframesCheckbox; intFieldGrp -e -enable false ticksPerFrameFieldGroup; intFieldGrp -e -enable false distancePerFrameFieldGroup;")
+    					exportBonesAndVertexWeightsCheckbox;
+    					checkBox -label "Export Keyframes" -value true 
+    					-onCommand("intFieldGrp -e -enable true ticksPerFrameFieldGroup; intFieldGrp -e -enable true distancePerFrameFieldGroup;")
+    					-offCommand("intFieldGrp -e -enable false ticksPerFrameFieldGroup; intFieldGrp -e -enable false distancePerFrameFieldGroup;")
+    					exportKeyframesCheckbox;
+                        intFieldGrp -numberOfFields 1 -label "Ticks Per Frame: " -value1 45 ticksPerFrameFieldGroup;
+                        intFieldGrp -numberOfFields 1 -label "Distance Per Frame: " -value1 1 distancePerFrameFieldGroup;
+					setParent ..;
+			setParent ..;			
+
+			frameLayout -label "Scene" -collapsable true;
+					columnLayout;
+					checkBox -label "Transform Scene" -value false
+					         -onCommand("floatFieldGrp -e -enable true translateFloatFieldBox; floatFieldGrp -e -enable true rotateFloatFieldBox; floatFieldGrp -e -enable true scaleFloatFieldBox;")
+					         -offCommand("floatFieldGrp -e -enable false translateFloatFieldBox; floatFieldGrp -e -enable false rotateFloatFieldBox; floatFieldGrp -e -enable false scaleFloatFieldBox;")
+					         exportDefaultMaterialCheckbox;
+				    floatFieldGrp -numberOfFields 3 -label "Translate(pixels)" -value1 0 -value2 0 -value3 0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -enable false translateFloatFieldBox;
+				    floatFieldGrp -numberOfFields 3 -label "Rotate(degrees)" -value1 0 -value2 0 -value3 0 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -enable false rotateFloatFieldBox;
+				    floatFieldGrp -numberOfFields 3 -label "Scaling(%)" -value1 100 -value2 100 -value3 100 -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 -columnWidth 4 50 -enable false scaleFloatFieldBox;
+					setParent ..;
+			setParent ..;		
+
+
+			frameLayout -label "Other" -collapsable true;
+					columnLayout;
+            			radioButtonGrp -numberOfRadioButtons 2 -label "Float Size: " -label1 "32" -label2 "64" -select 1 -enable1 true -columnAlign 1 "left" -columnWidth 1 80 -columnWidth 2 50 -columnWidth 3 50 floatSizeCheckBox;
+					setParent ..;
+			setParent ..;			
+		
+		// ----------------------------
+		
+		/* Set the gui components states to correspond with
+		   $initial settings */
+		   
+		//"-format txt;-float 32;-verticies;-normals;-texturecoordinates;-materials;-defaultmaterial 0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,2.0;-textures;-shaders;-bones;-keyframes 45,1;-transform 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1;";
+		
+		string $optionList[];
+		string $currentOptions = $initialSettings;
+		if(size($currentOptions) > 0)
+		{
+			tokenize($currentOptions, ";", $optionList);
+			for($index = 0; $index < size($optionList); $index++)
+			{
+				string $option = $optionList[$index];
+				tokenize($option, " ", $optionList);
+				if($option == "-format")
+				{
+					if ($optionList[1] == "txt")
+					{
+						radioButtonGrp -e select 1 fileFormatRadioButton;
+					}
+					else if ($optionList[1] == "bin")
+					{
+						radioButtonGrp -e select 2 fileFormatRadioButton;
+					}
+					else if ($optionList[1] == "tzip")
+					{
+						radioButtonGrp -e select 3 fileFormatRadioButton;
+					}
+					else if ($optionList[1] == "bzip")
+					{
+						radioButtonGrp -e select 4 fileFormatRadioButton;
+					}
+				}
+				else if($option == "-verticies")
+				{
+					checkBox -e -value true exportVerticesCheckBox;
+				}
+				else if($option == "-normals")
+				{
+					checkBox -e -value true exportNormalsCheckBox;
+				}
+				else if($option == "-texturecoordinates")
+				{
+					checkBox -e -value true exportTextureCoordinatesCheckBox;
+				}
+				else if($option == "-materials")
+				{
+					checkBox -e -value true exportMaterialsCheckbox;
+				}
+				else if($option == "-defaultmaterial")
+				{
+                    // TODO: handle default material
+				}
+				else if($option == "-float")
+				{
+					if ($optionList[1] == "32")
+					{
+						radioButtonGrp -e select 1 floatSizeCheckBox;
+			        }
+			        else
+					if ($optionList[1] == "64")
+					{
+						radioButtonGrp -e select 1 floatSizeCheckBox;
+			        }
+				}
+			}
+		}
+		   	
+		// action successful
+		return 1;
+	}
+	// handle query action
+	else if ($action == "query")
+	{
+		/* build query response string
+		   return in $resultCallback */
+		
+		eval($resultCallback + "-format txt;-float 32;-verticies;-normals;-texturecoordinates;-materials;-defaultmaterial 0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,2.0;-textures;-shaders;-bones;-keyframes 45,1;-transform 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1;");
+        /*
+		int $fileFormat = `fileFormatRadioButton -q -v`;
+        switch($fileFormat)
+        {
+            case 0:
+                $resultCallback = $resultCallback + "-format txt;";
+                break;
+            case 1:
+                $resultCallback = $resultCallback + "-format bin;";
+                break;                
+            case 2:
+                $resultCallback = $resultCallback + "-format tzip;";
+                break;
+            case 3:
+                $resultCallback = $resultCallback + "-format bzip;";
+                break;
+            default:
+                break;
+        }
+        $resultCallback = $resultCallback + "-float 32;-verticies;-normals;-texturecoordinates;-materials;-defaultmaterial 0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,0.7,0.7,0.7,1.0,2.0;-textures;-shaders;-bones;-keyframes 45,1;-transform 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1;";
+        */
+		
+		// action successful
+		return 1;
+	}
+	// handle unknown action
+	else
+	{
+		// Unrecognised Action
+		return 0;
+	}
+}
+
+//==================================
